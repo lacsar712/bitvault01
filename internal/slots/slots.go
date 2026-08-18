@@ -27,6 +27,22 @@ func AfterWrite(getMin func() (string, error), setMin func(string) error, body s
 	if err != nil {
 		return err
 	}
+	cur, err := getMin()
+	if err != nil && cur != "" {
+		return err
+	}
+	// An empty stored minimum means no rollback floor has been committed yet,
+	// so the new counter is accepted as the floor. Once a floor exists, the new
+	// counter must be >= it; anything lower is a rollback and must be rejected.
+	if cur != "" {
+		min, conv := strconv.Atoi(cur)
+		if conv != nil {
+			return conv
+		}
+		if c < min {
+			return fmt.Errorf("counter rollback rejected: %d < %d", c, min)
+		}
+	}
 	return setMin(strconv.Itoa(c))
 }
 

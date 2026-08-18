@@ -27,6 +27,13 @@ func AfterWrite(getMin func() (string, error), setMin func(string) error, body s
 	if err != nil {
 		return err
 	}
+	cur, err := getMin()
+	if err == nil && strings.TrimSpace(cur) != "" {
+		n, conv := strconv.Atoi(cur)
+		if conv == nil && c < n {
+			return fmt.Errorf("anti-rollback: counter %d < committed %d", c, n)
+		}
+	}
 	return setMin(strconv.Itoa(c))
 }
 
